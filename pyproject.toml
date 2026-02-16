@@ -1,0 +1,14 @@
+[project]
+name = "calliope"
+version = "0.1.0"
+description = "Poetry LLM trained from scratch using nanochat"
+requires-python = ">=3.10"
+dependencies = [
+    "pyarrow>=18.0.0",
+    "requests>=2.32.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
