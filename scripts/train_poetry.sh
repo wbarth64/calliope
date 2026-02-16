@@ -58,7 +58,6 @@ OMP_NUM_THREADS=1 uv run torchrun --standalone --nproc_per_node=8 \
     --depth=10 \
     --max-seq-len=512 \
     --device-batch-size=32 \
-    --run="poetry-v1" \
     --num-iterations=10000 \
     --eval-every=250 \
     --save-every=1000
