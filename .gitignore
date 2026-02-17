@@ -16,3 +16,6 @@ Thumbs.db
 
 # Project specific
 .claude/
+
+# Large data files (downloaded at training time)
+en.zip
