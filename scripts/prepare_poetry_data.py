@@ -1,13 +1,14 @@
 """
 Prepare poetry corpora for training with nanochat.
 
-Downloads four sources and converts them to parquet format using unified
+Downloads five sources and converts them to parquet format using unified
 stanza-aware chunking:
 
 1. Gutenberg Poetry Corpus (~3M lines from Project Gutenberg)
 2. Kaggle poemsdataset (michaelarman/poemsdataset, ~20K poems by form/topic)
 3. HuggingFace merve/poetry (573 curated poems with author metadata)
 4. PoeTree English corpus (zenodo.org/records/10907309, ~40K poems with stanza markup)
+5. Poetry Foundation (suayptalha/Poetry-Foundation-Poems, ~13.9K poems)
 
 Chunking strategy:
   - Split each poem into stanzas (blank-line separated, or stanza_id for PoeTree)
@@ -412,6 +413,42 @@ def load_poetree_documents(cache_dir: str,
 
 
 # ---------------------------------------------------------------------------
+# Source 5: Poetry Foundation (suayptalha/Poetry-Foundation-Poems)
+# ---------------------------------------------------------------------------
+
+def load_poetry_foundation_documents(global_seen: set[str]) -> list[str]:
+    """Load poems from Poetry Foundation dataset, chunk by stanza."""
+    print("\n--- Source 5: Poetry Foundation ---")
+    from datasets import load_dataset
+
+    ds = load_dataset("suayptalha/Poetry-Foundation-Poems", split="train")
+    documents = []
+    stats = Counter()
+
+    for row in ds:
+        text = clean_text(row["Poem"])
+        if len(text) < MIN_DOC_CHARS:
+            stats["too_short"] += 1
+            continue
+
+        key = text.lower()
+        if key in global_seen:
+            stats["duplicate"] += 1
+            continue
+        global_seen.add(key)
+
+        stanzas = text_to_stanzas(text)
+        chunks = chunk_stanzas(stanzas)
+        documents.extend(chunks)
+        stats["poems_kept"] += 1
+
+    print(f"  Poems: {stats['poems_kept']:,} kept, "
+          f"{stats['too_short']} too short, {stats['duplicate']} duplicates")
+    print(f"  Documents after chunking: {len(documents):,}")
+    return documents
+
+
+# ---------------------------------------------------------------------------
 # Writing and stats
 # ---------------------------------------------------------------------------
 
@@ -498,8 +535,11 @@ def main():
     poetree_docs = load_poetree_documents(cache_dir, global_seen=global_seen)
     compute_stats(poetree_docs, "PoeTree")
 
+    poetry_foundation_docs = load_poetry_foundation_documents(global_seen)
+    compute_stats(poetry_foundation_docs, "Poetry Foundation")
+
     # Combine
-    all_docs = gutenberg_docs + kaggle_docs + hf_docs + poetree_docs
+    all_docs = gutenberg_docs + kaggle_docs + hf_docs + poetree_docs + poetry_foundation_docs
     compute_stats(all_docs, "Combined")
 
     # Write
