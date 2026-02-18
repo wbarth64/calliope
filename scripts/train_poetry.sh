@@ -77,7 +77,6 @@ echo ""
 
 OMP_NUM_THREADS=1 uv run torchrun --standalone --nproc_per_node=8 \
     -m scripts.base_train \
-    --run="$WANDB_RUN" \
     --depth="$DEPTH" \
     --max-seq-len=512 \
     --window-pattern=L \
