@@ -54,9 +54,10 @@ echo ""
 # ── Prepare s1024 data (CHARACTER_BUDGET=3600) ────────────────────────────
 echo "=== Preparing s1024 data (CHARACTER_BUDGET=3600) ==="
 NANOCHAT_BASE_DIR="$S1024_BASE" uv run python -c "
-import sys, os
-sys.path.insert(0, os.environ.get('SCRIPT_DIR', '$SCRIPT_DIR'))
-import prepare_poetry_data as ppd
+import importlib.util, sys, os
+spec = importlib.util.spec_from_file_location('ppd', os.path.join('..', 'scripts', 'prepare_poetry_data.py'))
+ppd = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(ppd)
 ppd.CHARACTER_BUDGET = 3600
 ppd.main()
 "
